@@ -54,44 +54,19 @@ namespace Modbus_IP
         {
             try
             {
-                // Endereço do dispositivo Modbus IP
-                string ipAddress = "192.168.1.20"; // Substitua pelo endereço IP do seu dispositivo
-
-                // Porta do dispositivo Modbus IP (geralmente é 502)
-                int port = 502;
-
-                // Endereço do primeiro registro a ser lido
-                ushort startAddress = 55;
-
-                // Quantidade de registros a serem lidos
-                ushort numberOfRegisters = 2;
-
-                // Crie uma instância TcpClient para se conectar ao dispositivo Modbus IP
-                using (TcpClient tcpClient = new TcpClient(ipAddress, port))
+                if(txtIp.Text.Length > 0 && txtInfo.Text.Length > 0 )
                 {
-                    // Crie uma instância ModbusIpMaster para a comunicação
-                    ModbusFactory factory = new ModbusFactory();
-                    IModbusMaster master = factory.CreateMaster(tcpClient);
-
-                    // Faça uma leitura de registrador
-                    ushort[] data = master.ReadHoldingRegisters((byte)1, startAddress, numberOfRegisters);
-
-                    // Exiba os valores lidos em formato hexadecimal
-                    string result = "Valores lidos (hex): ";
-                    for (int i = 0; i < data.Length; i++)
-                    {
-                        result += data[i].ToString("X4") + " ";
-                    }
-
-                    // Chame a função de conversão para obter os valores reais
-                    double valorReal1 = ConvertToRealValue(data[0], data[1]);
-
-                    // Exiba os valores reais
-                    result += "\nValor Real 1: " + valorReal1 + "Volts";
-
-                    // Exiba o resultado
-                    MessageBox.Show(result);
+                    string ip = txtIp.Text;
+                    ushort adress = ushort.Parse(txtInfo.Text);
+                    double valor = ReadRegisterValue(ip, adress);
+                    txtValor.Text = valor.ToString();
                 }
+                else
+                {
+                    MessageBox.Show("Preencha os campos Ip e Adress");
+                }
+              
+               
             }
             catch (Exception ex)
             {
@@ -174,31 +149,40 @@ namespace Modbus_IP
 
         private void button4_Click(object sender, EventArgs e)
         {
-            //string ipAddress = "192.168.1.20";
-            string ipAddress = txtIp.Text ;
-            Console.WriteLine(ipAddress);
-            ushort startAddress = 55;
-            double valorLido = ReadRegisterValue(ipAddress, startAddress);
-            MessageBox.Show("Valor Real: " + valorLido + " Volts");
-            timer1.Enabled = true;
+
+            if (txtIp.Text.Length > 0)
+            {
+                string ipAddress = txtIp.Text;
+                btnStop.Enabled = true;
+                btnLer.Enabled = false;
+                timer1.Enabled = true;
+            }
+            else
+            {
+                MessageBox.Show("Preencha os campos Ip e Adress");
+            }
+
         }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            string ipAddress = "192.168.1.20"; // Substitua pelo endereço IP do seu dispositivo
+            string ipAddress = txtIp.Text;  // Substitua pelo endereço IP do seu dispositivo
 
-            // Ler o registrador 1
-            double valorRegistrador1 = ReadRegisterValue(ipAddress, 1);
+            double tensao = ReadRegisterValue(ipAddress, 1);
+            double corrente = ReadRegisterValue(ipAddress, 13);
+            double potencia = ReadRegisterValue(ipAddress, 25);
+            double frequencia = ReadRegisterValue(ipAddress, 55);
 
-            // Ler o registrador 55
-            double valorRegistrador55 = ReadRegisterValue(ipAddress, 55);
+
 
             // Exibir os valores nos TextBoxes
-            textBox1.Text =  valorRegistrador1.ToString("F2") + " V";
-            textBox2.Text =  valorRegistrador55.ToString("F2") + " Hz";
-            int MaxDataPoints = 10;
+            txtTensao.Text = tensao.ToString("F2") + " V";
+            txtCorrente.Text = corrente.ToString("F2") + " A";
+            txtPot.Text = potencia.ToString("F2") + " W";
+            txtFrequencia.Text = frequencia.ToString("F2") + " Hz";
+            
             // Adicione o valor lido como um novo ponto no gráfico
-            chart1.Series["Valores"].Points.AddY(valorRegistrador1);
+            chart1.Series["Valores"].Points.AddY(tensao);
 
             // Atualize o gráfico
             chart1.Update();
@@ -206,7 +190,14 @@ namespace Modbus_IP
 
         private void button5_Click(object sender, EventArgs e)
         {
+            btnLer.Enabled = true;
             timer1.Enabled = false;
+            timer1.Enabled = false;
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            txtPot.Text = "60 W";
         }
     }
 }
